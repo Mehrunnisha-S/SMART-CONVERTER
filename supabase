@@ -1,0 +1,48 @@
+#supabse
+
+/*
+# Create conversion history for Smart Converter
+
+1. New Tables
+- `conversion_history` stores completed conversions for the shared no-account workspace.
+- `id` is the generated record identifier.
+- `category` stores the measurement category.
+- `from_unit` and `to_unit` store the selected units.
+- `input_value` and `result_value` store numeric conversion values.
+- `created_at` stores the conversion timestamp.
+
+2. Security
+- Row level security is enabled.
+- The app intentionally permits anonymous and authenticated access because the requested login is a workspace welcome step rather than account authentication.
+- CRUD grants and four separate policies allow the converter UI to save, view, update, and remove its history.
+
+3. Notes
+- No existing tables are changed.
+- The table is designed for the current single workspace experience and can later be owner-scoped if account authentication is added.
+*/
+
+CREATE TABLE IF NOT EXISTS public.conversion_history (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  category text NOT NULL,
+  from_unit text NOT NULL,
+  to_unit text NOT NULL,
+  input_value numeric NOT NULL,
+  result_value numeric NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.conversion_history ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.conversion_history TO anon, authenticated;
+
+DROP POLICY IF EXISTS "public can view conversion history" ON public.conversion_history;
+CREATE POLICY "public can view conversion history" ON public.conversion_history FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "public can add conversion history" ON public.conversion_history;
+CREATE POLICY "public can add conversion history" ON public.conversion_history FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "public can update conversion history" ON public.conversion_history;
+CREATE POLICY "public can update conversion history" ON public.conversion_history FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "public can remove conversion history" ON public.conversion_history;
+CREATE POLICY "public can remove conversion history" ON public.conversion_history FOR DELETE TO anon, authenticated USING (true);
